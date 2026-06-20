@@ -1,0 +1,150 @@
+channels:
+  - id: linkedin
+    name: "LinkedIn (Perfil Pessoal + Página)"
+    quality_score: 5
+    category: "orgânico_social"
+    speed: "media"
+    cost: "baixo"
+    best_for: "identificação + autoridade"
+    why_functional: "Decisores de qualidade e operações estão ativos. Permite construir prova de competência em público antes de qualquer pedido. Excelente para IATF/automotivo e normas integradas."
+    identification_methods:
+      - "Busca Sales Navigator por título + palavras-chave (IATF, SGQ, auditoria, qualidade automotiva) + localização"
+      - "Monitorar engajamento em posts de CBs (Bureau Veritas, DNV, TÜV, IQA) e empresas do setor"
+      - "Comentar posts de prospects com insight específico da norma/setor"
+    promotion_tactics:
+      - "Posts consistentes 3-5x/semana: NCs comuns, mudanças de normas, casos práticos (anonimizados)"
+      - "Carrosséis e threads com valor puro (ex: 7 NCs que mais reprovam na IATF)"
+      - "Perfil otimizado com palavras-chave de normas + setores atendidos"
+    example_success: "Comentar post de Gerente de Qualidade de fornecedor tier 2 anunciando expansão: oferecer checklist específico da cláusula de controle de produção que costuma dar problema nesse momento."
+    anti_pattern: "InMail frio oferecendo serviços. Virar 'vendedor' nos comentários."
+    signals_that_increase_probability:
+      - "Lead visualizou perfil 3+ vezes"
+      - "Engajou (curtiu/comentou) em 2+ posts de valor"
+      - "Respondeu DM depois de comentário value-first"
+
+  - id: cb_partnerships
+    name: "Parcerias com Organismos Certificadores (CBs)"
+    quality_score: 5
+    category: "parceria"
+    speed: "lenta"
+    cost: "baixo"
+    best_for: "leads mais quentes"
+    why_functional: "CBs não podem consultar. Quando indicam você, o lead já tem dor + orçamento + timeline. Conversão altíssima. Isabel já tem histórico com Bureau Veritas."
+    identification_methods:
+      - "Relacionamento 1:1 com auditores e comerciais de 2-3 CBs principais (BV, DNV, TÜV, SGS, ONC)"
+      - "Ser o nome que eles recomendam quando cliente pergunta 'quem implanta?'"
+    promotion_tactics:
+      - "Oferecer valor para os CBs primeiro (treinamento, checklists atualizados, feedback de campo)"
+      - "Posicionar-se como 'o consultor que entrega sistema que passa sem NC grave'"
+    example_success: "Auditor de CB liga: 'Tenho um cliente automotivo em PR que precisa de IATF em 6 meses, você tem disponibilidade?'"
+    anti_pattern: "Tratar CB como concorrente ou só pedir indicação sem dar nada."
+    signals_that_increase_probability:
+      - "Veio por indicação explícita de CB"
+      - "Já está em conversa com certificadora"
+
+  - id: events
+    name: "Eventos e Congressos (CONGESQUA, Fórum IQA, FEIMEC...)"
+    quality_score: 4.5
+    category: "evento"
+    speed: "media"
+    cost: "medio"
+    best_for: "autoridade + networking qualificado"
+    why_functional: "Pessoas presentes já investem tempo e dinheiro em se atualizar sobre qualidade. Alta densidade de decisores com dor real. Palestrar multiplica 10x."
+    identification_methods:
+      - "Palestrar ou dar workshop (melhor forma)"
+      - "Abordagem no coffee break de quem fez pergunta difícil ou comentou problema específico"
+      - "QR code no material com 'diagnóstico rápido' ou checklist"
+    promotion_tactics:
+      - "Ser palestrante/patrocinador com tema prático (ex: transição 9001:2026, Rules 6ª ed IATF)"
+      - "Follow-up pós-evento 100% value (enviar o que prometeu + insight sobre o que a pessoa mencionou)"
+    example_success: "Após palestra no CONGESQUA ou IQA, 3-4 empresas de autopeças pedem diagnóstico porque 'estamos com problema exatamente no que você falou'."
+    anti_pattern: "Só aparecer, coletar cartão e mandar proposta genérica no dia seguinte."
+    signals_that_increase_probability:
+      - "Participou de evento específico de qualidade/automotivo"
+      - "Abordou você no evento falando de problema concreto"
+
+  - id: content_lead_magnets
+    name: "Conteúdo + Lead Magnets (Site + Blog + E-book + Diagnóstico)"
+    quality_score: 4
+    category: "inbound"
+    speed: "lenta"
+    cost: "baixo"
+    best_for: "inbound qualificado"
+    why_functional: "Quem baixa material sobre IATF ou 'preparação auditoria' já tem dor ou responsabilidade. Compounding ao longo do tempo."
+    identification_methods:
+      - "Formulário de diagnóstico gratuito de maturidade SGQ (perguntas sobre normas atuais, últimas NCs, pressão de cliente)"
+      - "Download de checklist '15 NCs mais comuns na IATF' ou 'Guia ISO 9001:2026'"
+      - "Tráfego orgânico via SEO para termos de alta intenção"
+    promotion_tactics:
+      - "Posts no LinkedIn que apontam para o material"
+      - "Nurturing por email/WhatsApp com mais valor (não venda)"
+    example_success: "Empresa de autopeças baixa o checklist IATF → 3 semanas depois pede conversa porque 'estamos com 4 NCs graves na auditoria de cliente'."
+    anti_pattern: "Lead magnet genérico ('Baixe nosso e-book sobre ISO') sem segmentação por norma/setor."
+    signals_that_increase_probability:
+      - "Baixou material específico de IATF ou 'auditoria de cliente'"
+      - "Preencheu diagnóstico e marcou 'tem ultimato de montadora' ou 'perdeu certificado'"
+
+  - id: software_partnerships
+    name: "Parcerias com Softwares de SGQ (8Quali, SoftExpert, etc.)"
+    quality_score: 4
+    category: "parceria"
+    speed: "lenta"
+    cost: "baixo"
+    best_for: "leads com ferramenta mas sem processo"
+    why_functional: "Clientes compram software de gestão da qualidade mas travam na implementação dos processos reais. Softwares indicam consultores."
+    identification_methods:
+      - "Relação com CSMs e comerciais dos softwares"
+      - "Ser parceiro recomendado quando cliente reclama 'temos o software mas ninguém usa / não passa auditoria'"
+    promotion_tactics:
+      - "Oferecer integração de conhecimento (ex: 'como configurar o 8Quali para atender cláusula X da IATF')"
+      - "Co-webinars ou cases conjuntos"
+    signals_that_increase_probability:
+      - "Já usa ou está implantando software de SGQ específico"
+
+  - id: client_referrals
+    name: "Indicações de Clientes Atuais e Ex-Clientes"
+    quality_score: 5
+    category: "referencia"
+    speed: "muito_lenta"
+    cost: "baixo"
+    best_for: "longo prazo (compounding)"
+    why_functional: "Prova social mais forte que existe para consultoria de alto toque. Quem já passou pela implementação com você recomenda para quem está no mesmo momento."
+    identification_methods:
+      - "Manter relacionamento pós-certificação (atualizações de norma, 'como está o sistema 1 ano depois?')"
+      - "Pedir indicação explícita em momento certo (depois de sucesso visível na auditoria)"
+    promotion_tactics:
+      - "Cases de sucesso (com autorização) usados em conteúdo"
+      - "Convite para clientes satisfeitos participarem de webinars como 'depoimento real'"
+    signals_that_increase_probability:
+      - "Veio por indicação direta de cliente anterior"
+
+  - id: cold_direct
+    name: "Abordagem Direta Fria (Ligação / WhatsApp / Email sem contexto)"
+    quality_score: 1
+    category: "interrupcao"
+    speed: "rapida"
+    cost: "baixo"
+    best_for: "quase nunca (só casos extremos)"
+    why_functional: "Quase nunca é funcional para este tipo de venda. Transforma a empresa em 'propaganda incômoda'. Baixíssima conversão e danifica reputação."
+    identification_methods:
+      - "Evitar como estratégia. Usar só em leads com sinal extremo (ex: perdeu certificado esta semana + ultimato público)"
+    promotion_tactics:
+      - "Nunca 'Olá, somos a IsoSoluções, fazemos ISO...'. No máximo: abordagem consultiva com insight específico + oferta de material."
+    anti_pattern: "Lista comprada + script de vendas + volume."
+    signals_that_increase_probability:
+      - "Nenhum (o canal em si já é sinal negativo na maioria dos casos)"
+
+  - id: google_local_seo
+    name: "Google Meu Negócio + SEO Local + Busca Intenção"
+    quality_score: 3.5
+    category: "busca"
+    speed: "lenta"
+    cost: "baixo_a_medio"
+    best_for: "quem busca ativamente 'consultoria iso [região]'"
+    why_functional: "Funciona para buscas de alta intenção local/regional. Menos eficaz para IATF de alto ticket (decisores buscam mais no LinkedIn e setor)."
+    identification_methods:
+      - "Aparecer bem ranqueado para 'consultoria IATF Paraná', 'implementação ISO 9001 SC', etc."
+      - "Avaliações de clientes anteriores"
+    promotion_tactics:
+      - "Otimizar GMB com fotos, posts, serviços detalhados por norma"
+      - "Conteúdo no site para SEO"

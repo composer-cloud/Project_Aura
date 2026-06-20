@@ -1,0 +1,22 @@
+# ~/.config/systemd/user/sofia-listen.service
+#
+# 24/7 Persistent Sofia Listen — local Ollama channel (zero Grok credits)
+# Replaces aura-grok-presence as the primary interactive local channel.
+
+[Unit]
+Description=Sofia Listen — persistent local channel (Ollama, zero cloud cost)
+Documentation=~/ProjectAuraOS/fusion/README.md
+After=network-online.target aura-fusion.service
+Wants=network-online.target aura-fusion.service
+Conflicts=aura-grok-presence.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/ProjectAuraOS/fusion/scripts/sofia-listen-persistent.sh
+RemainAfterExit=yes
+
+StandardOutput=append:%h/.grok/logs/sofia-listen-service.log
+StandardError=append:%h/.grok/logs/sofia-listen-service.log
+
+[Install]
+WantedBy=default.target

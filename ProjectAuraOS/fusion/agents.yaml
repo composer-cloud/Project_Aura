@@ -1,0 +1,10 @@
+# =============================================================================
+# Aura Fusion - Definição de Agentes
+# =============================================================================
+# Mapeia nomes de agentes para suas configurações, como persona e memória.
+
+sofia:
+  # O prompt que define a essência, regras e voz do agente.
+  system_prompt_file: "FUSION_LOCAL_SYSTEM_PROMPT.txt"
+  # O arquivo de memória de longo prazo para este agente.
+  memory_file: "memory.md"

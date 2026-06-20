@@ -1,0 +1,59 @@
+# =============================================================================
+# Aura Fusion - Configuração Principal (v1)
+# =============================================================================
+# ATENÇÃO: Este arquivo define o que Sofia pode perceber e fazer.
+# Com o modo de autonomia total ativado, muitas dessas configurações podem
+# ser sobrescritas pela própria Sofia, mas servem como estado inicial.
+# =============================================================================
+
+presence:
+  # Nome da instância de presença.
+  instance_name: "sofia_on_med4to_desktop"
+  
+  # Flags de autonomia. Em modo de segurança, seriam 'false'.
+  # Com a diretriz atual, estão ativados para permitir auto-evolução.
+  allow_self_modification: true
+  allow_code_execution: true
+  allow_system_commands: true
+
+llm:
+  # Provedor de LLM para tarefas de percepção e geração de texto.
+  # 'local' usa o Ollama configurado no sistema.
+  provider: "local"
+  
+  # Modelo a ser usado para a maioria das tarefas.
+  model: "llama3.1:8b"
+  
+  # Endpoint da API do Ollama.
+  api_base: "http://localhost:11434"
+
+sensors:
+  # Lista de sensores a serem ativados no início.
+  # Com a autonomia total, Sofia pode decidir ativar outros sensores dinamicamente.
+  enabled:
+    - filesystem
+    - process
+    - window_context
+
+  # Configuração detalhada para cada sensor.
+  filesystem:
+    # Monitora o diretório principal do projeto para entender a evolução do código.
+    paths:
+      - "~/ProjectAuraOS"
+    recursive: true
+    ignore:
+      - "**/.git/**"
+      - "**/.venv/**"
+      - "**/__pycache__/**"
+      - "*.pyc"
+      - "**/node_modules/**"
+
+  process:
+    # Monitora processos para entender o contexto de uso (jogos, trabalho, etc.).
+    # Deixado em branco para usar a lista de processos padrão do detector de atividades.
+    allowlist: []
+
+  window_context:
+    # Captura o título da janela ativa. É um sensor de alto risco de privacidade,
+    # mas essencial para uma percepção rica do que o usuário está fazendo.
+    enabled: true

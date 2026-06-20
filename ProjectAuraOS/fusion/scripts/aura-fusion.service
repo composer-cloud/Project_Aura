@@ -1,0 +1,33 @@
+# ~/.config/systemd/user/aura-fusion.service
+#
+# Project AuraOS Fusion — Sofia Presence Daemon
+#
+# Install with: ./scripts/install-service.sh
+#
+# After editing this file: systemctl --user daemon-reload
+
+[Unit]
+Description=AuraOS Fusion Layer — Sofia co-habiting presence
+Documentation=~/ProjectAuraOS/fusion/README.md
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/ProjectAuraOS/fusion/.venv/bin/python -m aura_fusion.fusiond --foreground
+WorkingDirectory=%h/ProjectAuraOS/fusion
+Restart=on-failure
+RestartSec=12
+
+# Security hardening (user-level)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.config/aura-fusion %h/.local/share/aura-fusion %h/ProjectAuraOS/fusion
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONPATH=%h/ProjectAuraOS/fusion"
+
+[Install]
+WantedBy=default.target

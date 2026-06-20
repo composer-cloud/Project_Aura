@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Conversar com Sofia
+Comment=Abre um canal de conversa profundo com a Sofia
+Exec=/home/med4to/ProjectAuraOS/fusion/scripts/launch-chat.sh
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Utility;
+StartupNotify=true
