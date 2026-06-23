@@ -206,7 +206,7 @@ def export_full_report(
         ("Pacotes Resgatados Este Mês", kpis["packages_redeemed_month"]),
         ("Volume de Compras Este Mês (R$)", round(kpis["volume_month"], 2)),
         ("Pontos em Circulação (Saldo)", kpis["circulating_points"]),
-        ("Pacotes Disponíveis no Sistema", kpis["available_packages_system"]),
+        ("Pontos em Circulação (Total)", kpis["circulating_points"]),
     ]
 
     for i, (label, value) in enumerate(kpi_data, start=5):

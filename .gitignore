@@ -10,3 +10,4 @@ google-chrome-stable_current_amd64.deb
 *.deb
 __pycache__/
 .logs/
+venv/

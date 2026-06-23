@@ -170,7 +170,7 @@ def generate_points_card(
 
     # === PROGRESSO PARA PRÓXIMOS PRÊMIOS (o que o usuário pediu) ===
     # Pacote grátis
-    pkg_info = get_next_package_info(current_points)
+    pkg_info = get_milestone_progress(current_points)
     remaining_pkg = pkg_info["remaining"] if points_to_next_package == 0 else points_to_next_package
 
     # Barra de progresso visual para o próximo pacote
