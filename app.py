@@ -712,7 +712,7 @@ def prepare_points_notification(client, result, notification_type="purchase"):
     """Prepara mensagem, cartão PNG e link WhatsApp após conceder pontos."""
     whatsapp_msg = build_purchase_message(client, result)
     # Passa dados de progresso para o cartão profissional (avisos de "quanto falta")
-    pkg_info = points_remaining_for_next_package(client["current_points"])
+    pkg_info = get_milestone_progress(client["current_points"])["remaining"]
     card_buffer = generate_points_card(
         client_name=client["name"],
         points_earned=result["final_points"],
@@ -1099,8 +1099,6 @@ filtered_clients = []
 for c in clients:
     if min_points > 0 and c["current_points"] < min_points:
         continue
-    # filtro de pacotes removido (sem resgate)
-        continue
     filtered_clients.append(c)
 
 # Tabela bonita de clientes
@@ -1126,7 +1124,7 @@ if filtered_clients:
         column_config={
             "Nome": st.column_config.TextColumn(width="medium"),
             "Pontos Atuais": st.column_config.NumberColumn(format="%d", help="Saldo atual de pontos (acumulado)"),
-            "Pacotes Disp.": st.column_config.NumberColumn(help="Pacotes que podem ser resgatados agora"),
+
             "Volume Mês": st.column_config.NumberColumn(format="R$ %.2f"),
             "Total Gasto": st.column_config.NumberColumn(format="R$ %.2f"),
         },
@@ -1301,7 +1299,7 @@ if st.session_state.selected_client_id:
                                     notes="Concedido automaticamente ao atingir 500 pontos.",
                                 )
                                 client = get_client_by_id(client["id"])
-                                wa_msg = build_milestone_reward_message(client, default_label)
+                                wa_msg = build_milestone_reward_message(client, "Cafeteira")
                                 wa_url = build_whatsapp_url(client["phone"], wa_msg)
                                 log_notification(
                                     client_id=client["id"],
