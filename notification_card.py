@@ -190,7 +190,7 @@ def generate_points_card(
 
     # Texto do progresso do pacote
     y = bar_y + bar_height + 8
-    pkg_msg = pkg_info["message"] if remaining_pkg > 0 else "🎁 Pacote grátis disponível para resgate!"
+    pkg_msg = pkg_info["progress_text"] if remaining_pkg > 0 else "🎁 Pacote grátis disponível para resgate!"
     draw.text((width // 2, y), pkg_msg, font=font_progress, fill=text_color if remaining_pkg > 0 else accent, anchor="mt")
     y += 24
 
