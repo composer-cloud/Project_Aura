@@ -775,28 +775,30 @@ def render_notification_panel(notification: dict):
 
     if has_card:
         with notif_col1:
-            st.image(notification["card_png"], caption="Cartão estático de pontos", width='stretch')
+            st.image(notification["card_png"], caption="Cartão de Fidelidade", width='stretch')
+
+    with notif_col2:
+        st.markdown("**Mensagem para WhatsApp:**")
+        st.code(notification["message"], language=None)
+
+        if has_card:
             st.download_button(
-                label="⬇️ Baixar Cartão de Pontos (PNG)",
+                label="1️⃣ Baixar Cartão de Pontos (PNG)",
                 data=notification["card_png"],
                 file_name=f"cartao_pontos_{notification['client_name'].split()[0].lower()}.png",
                 mime="image/png",
                 width='stretch',
             )
 
-    with notif_col2:
-        st.markdown("**Mensagem para WhatsApp:**")
-        st.code(notification["message"], language=None)
         st.link_button(
-            "📱 Enviar no WhatsApp",
+            "2️⃣ Abrir WhatsApp e enviar mensagem",
             notification["wa_url"],
             type="primary",
             width='stretch',
         )
-        st.caption(
-            "Clique para abrir o WhatsApp com a mensagem já preenchida. "
-            "Envie também o cartão PNG baixado acima."
-        )
+
+        if has_card:
+            st.caption("Baixe o cartão (passo 1), abra o WhatsApp (passo 2) e envie o PNG como anexo junto com a mensagem.")
 
         # Automação: após clicar no WhatsApp, o admin pode limpar o painel de aviso
         if st.button("✅ Limpar este aviso (após enviar)", key=f"clear_notif_{notification.get('client_name','')}", width='stretch'):
