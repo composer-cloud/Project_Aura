@@ -1,8 +1,8 @@
 """
 notification_card.py
-Gera cartão de fidelidade (PNG) usando os templates base pré-renderizados
-em templates/purchase_base.png e templates/milestone_base.png.
-Apenas os dados dinâmicos são desenhados sobre o template.
+Gera o cartão de fidelidade (PNG) renderizando os dados dinâmicos
+diretamente sobre o card_template.png (logo, moldura vermelha, cafeteira).
+Os dados e a barra de progresso são personalizados a cada compra.
 """
 
 from io import BytesIO
@@ -14,28 +14,32 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from calculations import format_currency, get_milestone_progress
 
 BASE_DIR = Path(__file__).parent
-PURCHASE_BASE  = BASE_DIR / "templates" / "purchase_base.png"
-MILESTONE_BASE = BASE_DIR / "templates" / "milestone_base.png"
+CARD_TEMPLATE = BASE_DIR / "card_template.png"
 
-# Posições de cada elemento de dado (coordenadas do template 848x1264)
-RECT_TOP   = 514
-RECT_LEFT  = 51
-RECT_RIGHT = 797
-BAR_Y      = 960
-BAR_X1     = 75
-BAR_X2     = 773
-BAR_H      = 22
-CX         = (RECT_LEFT + RECT_RIGHT) // 2   # 424
+# ── Geometria do template (848 x 1264) ───────────────────────────────────────
+RECT_TOP    = 516
+RECT_BOTTOM = 1051
+RECT_LEFT   = 51
+RECT_RIGHT  = 797
+CX          = (RECT_LEFT + RECT_RIGHT) // 2   # 424
 
-# Y de cada campo dinâmico no cartão de compra
-Y_POINTS  = RECT_TOP + 92    # "+X PONTOS GANHOS"
-Y_INFO    = Y_POINTS + 80    # "Compra: X | Saldo: X"
-Y_FALTAM  = Y_INFO + 34      # "Faltam X pontos..."
+# Barra de progresso (cobre a barra decorativa do template)
+BAR_X1  = 90
+BAR_X2  = 760
+BAR_TOP = 990
+BAR_BOT = 1021
 
-# Y do nome no cartão milestone
-Y_NAME_MILE = RECT_TOP + 40
+# Cores
+TEAL  = (0, 224, 214)
+WHITE = (240, 245, 250)
+MUTED = (150, 170, 190)
+BG    = (32, 40, 47)
+TRACK = (44, 58, 72)
+
+MILESTONE_TARGET = 500
 
 
+# ── Fontes ────────────────────────────────────────────────────────────────────
 def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     candidates = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold
@@ -53,9 +57,10 @@ def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
-def _glow(img: Image.Image, pos, text: str, font,
-          text_color, glow_color, radius: int = 12, anchor: str = "mt") -> Image.Image:
-    for r, alpha in [(radius, 220), (max(1, radius // 2), 160)]:
+# ── Efeito neon (glow) ────────────────────────────────────────────────────────
+def _glow(img: Image.Image, pos, text: str, font, text_color, glow_color,
+          radius: int = 12, anchor: str = "mm") -> Image.Image:
+    for r, alpha in [(radius, 210), (max(1, radius // 2), 150)]:
         layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
         ImageDraw.Draw(layer).text(pos, text, font=font,
                                    fill=(*glow_color[:3], alpha), anchor=anchor)
@@ -65,25 +70,55 @@ def _glow(img: Image.Image, pos, text: str, font,
     return img
 
 
-def _cover(draw: ImageDraw.ImageDraw, y: int, height: int, bg_color):
-    """Cobre uma faixa horizontal com a cor de fundo para apagar texto anterior."""
-    draw.rectangle([(RECT_LEFT + 5, y - 4), (RECT_RIGHT - 5, y + height + 4)],
-                   fill=bg_color)
+def _tracked_text(draw: ImageDraw.ImageDraw, cx: int, cy: int, text: str,
+                  font, fill, spacing: int = 6):
+    """Texto centrado (horizontal e vertical) com espaçamento entre letras."""
+    widths = [draw.textlength(ch, font=font) for ch in text]
+    total = sum(widths) + spacing * (len(text) - 1)
+    x = cx - total / 2
+    for ch, w in zip(text, widths):
+        draw.text((x, cy), ch, font=font, fill=fill, anchor="lm")
+        x += w + spacing
 
 
-def _progress_bar(draw: ImageDraw.ImageDraw, pct: float, bg_color):
-    teal = (0, 220, 210)
-    draw.rectangle([(BAR_X1 - 5, BAR_Y - 8), (BAR_X2 + 5, BAR_Y + BAR_H + 10)],
-                   fill=bg_color)
-    fill_w = int((BAR_X2 - BAR_X1) * min(1.0, pct))
-    draw.rounded_rectangle([(BAR_X1, BAR_Y), (BAR_X2, BAR_Y + BAR_H)],
-                            radius=10, fill=(40, 55, 70))
-    if fill_w > 0:
-        draw.rounded_rectangle([(BAR_X1, BAR_Y), (BAR_X1 + fill_w, BAR_Y + BAR_H)],
-                                radius=10, fill=teal)
-    draw.text(((BAR_X1 + BAR_X2) // 2, BAR_Y + BAR_H // 2),
-              f"{int(pct * 100)}%", font=_load_font(13, bold=True),
-              fill=(240, 245, 250), anchor="mm")
+# ── Pílula de informação (rótulo + valor) ─────────────────────────────────────
+def _info_pill(img: Image.Image, cx: int, top: int, w: int, h: int,
+               label: str, value: str) -> Image.Image:
+    draw = ImageDraw.Draw(img)
+    left, right = cx - w // 2, cx + w // 2
+    draw.rounded_rectangle([(left, top), (right, top + h)], radius=14,
+                           fill=(38, 49, 60), outline=(70, 88, 104), width=1)
+    draw.text((cx, top + 18), label, font=_load_font(15, bold=True),
+              fill=TEAL, anchor="mm")
+    draw.text((cx, top + h - 24), value, font=_load_font(24, bold=True),
+              fill=WHITE, anchor="mm")
+    return img
+
+
+# ── Barra de progresso personalizada ──────────────────────────────────────────
+def _progress_bar(img: Image.Image, pct: float) -> Image.Image:
+    pct = max(0.0, min(1.0, pct))
+    draw = ImageDraw.Draw(img)
+    # Cobre a barra decorativa do template
+    draw.rectangle([(RECT_LEFT + 6, BAR_TOP - 8), (RECT_RIGHT - 6, BAR_BOT + 8)], fill=BG)
+
+    # Trilho
+    radius = (BAR_BOT - BAR_TOP) // 2
+    draw.rounded_rectangle([(BAR_X1, BAR_TOP), (BAR_X2, BAR_BOT)],
+                           radius=radius, fill=TRACK)
+    # Preenchimento com glow
+    fill_w = int((BAR_X2 - BAR_X1) * pct)
+    if fill_w > 6:
+        glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        ImageDraw.Draw(glow).rounded_rectangle(
+            [(BAR_X1, BAR_TOP), (BAR_X1 + fill_w, BAR_BOT)],
+            radius=radius, fill=(*TEAL, 180))
+        glow = glow.filter(ImageFilter.GaussianBlur(radius=6))
+        img = Image.alpha_composite(img.convert("RGBA"), glow).convert("RGB")
+        draw = ImageDraw.Draw(img)
+        draw.rounded_rectangle([(BAR_X1, BAR_TOP), (BAR_X1 + fill_w, BAR_BOT)],
+                               radius=radius, fill=TEAL)
+    return img
 
 
 def generate_points_card(
@@ -98,60 +133,64 @@ def generate_points_card(
     milestone_remaining: int = 0,
 ) -> BytesIO:
     settings = settings or {}
-    teal  = (0, 220, 210)
-    white = (240, 245, 250)
-    muted = (150, 170, 190)
     first_name = client_name.split()[0] if client_name else "Parceiro"
     pkg_info = get_milestone_progress(current_points)
     is_milestone = pkg_info["reached"]
 
-    if is_milestone:
-        # ── CARTÃO MILESTONE ─────────────────────────────────────────────────
-        # Template já tem: "VOCÊ ATINGIU O MARCO DE", "500 PACOTES", "CAFETEIRA",
-        # barra 100%, rodapé. Só o nome do cliente é dinâmico.
-        img = Image.open(MILESTONE_BASE).convert("RGB")
-        bg_color = img.getpixel((10, 460))
-        draw = ImageDraw.Draw(img)
+    img = Image.open(CARD_TEMPLATE).convert("RGB")
 
-        # Cobre área do nome e desenha o nome real
-        _cover(draw, Y_NAME_MILE, 50, bg_color)
-        font_name = _load_font(36, bold=True)
-        img = _glow(img, (CX, Y_NAME_MILE), f"Parabéns, {first_name}!",
-                    font_name, white, teal, radius=8)
+    if is_milestone:
+        # ── CARTÃO MILESTONE (500 pontos atingidos) ──────────────────────────
+        img = _glow(img, (CX, 580), f"Parabéns, {first_name}!",
+                    _load_font(36, bold=True), WHITE, TEAL, radius=8)
+        draw = ImageDraw.Draw(img)
+        _tracked_text(draw, CX, 638, "VOCÊ ATINGIU O MARCO DE",
+                      _load_font(20, bold=True), TEAL, spacing=4)
+
+        img = _glow(img, (CX, 730), f"{MILESTONE_TARGET} PONTOS",
+                    _load_font(82, bold=True), TEAL, TEAL, radius=16)
+        draw = ImageDraw.Draw(img)
+        draw.text((CX, 818), "Sua recompensa pela fidelidade:",
+                  font=_load_font(20), fill=MUTED, anchor="mm")
+
+        img = _glow(img, (CX, 884), "CAFETEIRA",
+                    _load_font(54, bold=True), WHITE, TEAL, radius=12)
+        draw = ImageDraw.Draw(img)
+        draw.text((CX, 952), "Seu brinde já está separado. É só retirar!",
+                  font=_load_font(18), fill=MUTED, anchor="mm")
+
+        img = _progress_bar(img, 1.0)
 
     else:
         # ── CARTÃO DE COMPRA ─────────────────────────────────────────────────
-        # Template já tem: título "Parabéns! Você ganhou pontos!" e barra estática.
-        # Dados dinâmicos: pontos, compra/saldo, faltam, barra de progresso.
-        img = Image.open(PURCHASE_BASE).convert("RGB")
-        bg_color = img.getpixel((10, 460))
+        draw = ImageDraw.Draw(img)
+        draw.text((CX, 562), first_name, font=_load_font(30, bold=True),
+                  fill=WHITE, anchor="mm")
+        _tracked_text(draw, CX, 602, "VOCÊ GANHOU",
+                      _load_font(20, bold=True), TEAL, spacing=5)
+
+        img = _glow(img, (CX, 700), f"+{points_earned}",
+                    _load_font(128, bold=True), TEAL, TEAL, radius=18)
+        draw = ImageDraw.Draw(img)
+        pts_word = "PONTO" if points_earned == 1 else "PONTOS"
+        _tracked_text(draw, CX, 782, pts_word,
+                      _load_font(26, bold=True), WHITE, spacing=8)
+
+        # Pílulas: Compra | Saldo atual
+        img = _info_pill(img, CX - 160, 838, 290, 76, "COMPRA",
+                         format_currency(amount))
+        img = _info_pill(img, CX + 160, 838, 290, 76, "SALDO ATUAL",
+                         f"{current_points} pts")
         draw = ImageDraw.Draw(img)
 
-        # +X PONTOS GANHOS
-        _cover(draw, Y_POINTS, 90, bg_color)
-        font_big = _load_font(66, bold=True)
-        img = _glow(img, (CX, Y_POINTS), f"+{points_earned} PONTOS GANHOS",
-                    font_big, teal, teal, radius=14)
-        draw = ImageDraw.Draw(img)
-
-        # Compra | Saldo
-        _cover(draw, Y_INFO, 28, bg_color)
-        font_info = _load_font(20)
-        draw.text((CX, Y_INFO),
-                  f"Compra: {format_currency(amount)}  |  Saldo atual: {current_points} pts",
-                  font=font_info, fill=white, anchor="mt")
-
-        # Faltam X pontos
+        # Faltam X para a cafeteira
         remaining = points_to_next_package if points_to_next_package > 0 else pkg_info["remaining"]
-        _cover(draw, Y_FALTAM, 24, bg_color)
-        font_faltam = _load_font(18)
-        draw.text((CX, Y_FALTAM),
-                  f"Faltam {remaining} pontos para ganhar a cafeteira",
-                  font=font_faltam, fill=muted, anchor="mt")
+        draw.text((CX, 952), f"Faltam {remaining} pontos para a Cafeteira",
+                  font=_load_font(19), fill=MUTED, anchor="mm")
 
-        # Barra dinâmica
-        pct = min(1.0, current_points / 500.0)
-        _progress_bar(draw, pct, bg_color)
+        # Barra de progresso real
+        pct = current_points / float(MILESTONE_TARGET)
+        img = _progress_bar(img, pct)
 
     buffer = BytesIO()
     img.save(buffer, format="PNG", optimize=True)
