@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
     Setup completo — AuraOS / Dashboard Parceiro Isopor
-    Instala ferramentas, dependências e drivers ASUS oficiais.
+    Instala ferramentas, dependências, drivers ASUS e softwares de lazer/utilidade/organização.
 .NOTES
     Execute como Administrador no PowerShell:
     Set-ExecutionPolicy Bypass -Scope Process -Force; .\SETUP_COMPLETO.ps1
@@ -26,7 +26,7 @@ function Install-WingetApp {
     if ($LASTEXITCODE -eq 0 -or ($out -join '') -match 'already installed|já instalado') {
         Write-OK $Nome
     } else {
-        Write-Warn "$Nome não instalado via winget (cód $LASTEXITCODE) — instale manualmente se necessário"
+        Write-Warn "$Nome não instalado (cód $LASTEXITCODE) — instale manualmente se necessário"
     }
 }
 
@@ -36,8 +36,8 @@ function Install-WingetApp {
 Clear-Host
 Write-Host @"
 ╔══════════════════════════════════════════════════════════╗
-║   SETUP COMPLETO — AuraOS / Dashboard Isopor          ║
-║   Drivers • Dev Tools • Python • Node.js • ASUS 2x     ║
+║   SETUP COMPLETO — AuraOS                             ║
+║   Dev • Lazer • Utilidades • Organização • ASUS 2x      ║
 ╚══════════════════════════════════════════════════════════╝
 "@ -ForegroundColor Magenta
 
@@ -85,12 +85,105 @@ Install-WingetApp "Microsoft.WindowsTerminal"    "Windows Terminal"
 Install-WingetApp "7zip.7zip"                    "7-Zip"
 Install-WingetApp "Cloudflare.cloudflared"       "Cloudflared (para tunnel / serve.sh)"
 
-# Recarrega PATH para usar ferramentas recém-instaladas nesta sessão
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
             [System.Environment]::GetEnvironmentVariable("Path","User")
 
 # ─────────────────────────────────────────────
-#  4. Pacotes Python (requirements.txt)
+#  4. LAZER — Games, música, streaming, comunicação
+# ─────────────────────────────────────────────
+Write-Step "LAZER — Games, música, streaming e comunicação"
+
+Install-WingetApp "Valve.Steam"                       "Steam (plataforma de jogos)"
+Install-WingetApp "EpicGames.EpicGamesLauncher"       "Epic Games Launcher"
+Install-WingetApp "Discord.Discord"                   "Discord"
+Install-WingetApp "Spotify.Spotify"                   "Spotify"
+Install-WingetApp "VideoLAN.VLC"                      "VLC Media Player"
+Install-WingetApp "OBSProject.OBSStudio"              "OBS Studio (streaming/gravação)"
+Install-WingetApp "Google.Chrome"                     "Google Chrome"
+Install-WingetApp "WhatsApp.WhatsApp"                 "WhatsApp"
+Install-WingetApp "Telegram.TelegramDesktop"          "Telegram"
+
+# ─────────────────────────────────────────────
+#  5. UTILIDADES — Sistema, hardware, produção
+# ─────────────────────────────────────────────
+Write-Step "UTILIDADES — Sistema, hardware e produção"
+
+# Windows PowerToys: janelas, atalhos, renomeação em lote, Color Picker, etc.
+Install-WingetApp "Microsoft.PowerToys"               "Microsoft PowerToys"
+
+# Editor de texto avançado
+Install-WingetApp "Notepad++.Notepad++"               "Notepad++"
+
+# Monitor de hardware em tempo real
+Install-WingetApp "CPUID.CPU-Z"                       "CPU-Z (info de CPU/RAM/placa-mãe)"
+Install-WingetApp "HWiNFO.HWiNFO"                     "HWiNFO64 (monitoramento completo de hardware)"
+Install-WingetApp "CrystalDewWorld.CrystalDiskInfo"   "CrystalDiskInfo (saúde dos SSDs/HDDs)"
+Install-WingetApp "ALCPU.CoreTemp"                    "Core Temp (temperatura por núcleo)"
+
+# Screenshots e gravação de tela
+Install-WingetApp "ShareX.ShareX"                     "ShareX (capturas e GIFs)"
+
+# Busca ultrarrrápida de arquivos
+Install-WingetApp "voidtools.Everything"               "Everything (busca instantânea de arquivos)"
+
+# Limpeza e otimização do Windows
+Install-WingetApp "Piriform.CCleaner"                 "CCleaner (limpeza do sistema)"
+
+# Gerenciador de senhas
+Install-WingetApp "Bitwarden.Bitwarden"               "Bitwarden (gerenciador de senhas)"
+
+# Torrent
+Install-WingetApp "qBittorrent.qBittorrent"           "qBittorrent"
+
+# PDF
+Install-WingetApp "Adobe.Acrobat.Reader.64-bit"       "Adobe Acrobat Reader"
+
+# WinSCP — transferência FTP/SFTP (usado com serve.sh / cloudflared)
+Install-WingetApp "WinSCP.WinSCP"                     "WinSCP (FTP/SFTP)"
+
+# Fontes
+Install-WingetApp "Google.GoogleDrive"                "Google Drive (backup e sincronização)"
+
+# ─────────────────────────────────────────────
+#  6. ORGANIZAÇÃO — Notas, tarefas, comunicação profissional
+# ─────────────────────────────────────────────
+Write-Step "ORGANIZAÇÃO — Notas, tarefas e produtividade"
+
+# Notion — wiki / banco de dados / projetos
+Install-WingetApp "Notion.Notion"                     "Notion"
+
+# Obsidian — notas em Markdown com links entre notas (segundo cérebro)
+Install-WingetApp "Obsidian.Obsidian"                 "Obsidian (notas / segundo cérebro)"
+
+# Todoist — gerenciamento de tarefas
+Install-WingetApp "Doist.Todoist"                     "Todoist"
+
+# Microsoft To Do — integração com Outlook/365
+Install-WingetApp "Microsoft.To-Do"                   "Microsoft To Do"
+
+# Trello — quadros Kanban
+Install-WingetApp "Atlassian.Trello"                  "Trello"
+
+# Slack — comunicação de equipe
+Install-WingetApp "SlackTechnologies.Slack"           "Slack"
+
+# Zoom — videochamadas
+Install-WingetApp "Zoom.Zoom"                         "Zoom"
+
+# Thunderbird — cliente de e-mail desktop
+Install-WingetApp "Mozilla.Thunderbird"               "Thunderbird (e-mail)"
+
+# Canva — design gráfico (via Microsoft Store)
+Write-Host "  -> Canva (Microsoft Store)..." -NoNewline
+$cvOut = winget install --id "Canva.Canva" --silent --accept-package-agreements --accept-source-agreements 2>&1
+if ($LASTEXITCODE -eq 0 -or ($cvOut -join '') -match 'already installed|já instalado') {
+    Write-OK "Canva"
+} else {
+    Write-Warn "Canva: acesse https://www.canva.com/ (versão web)"
+}
+
+# ─────────────────────────────────────────────
+#  7. Pacotes Python (requirements.txt)
 # ─────────────────────────────────────────────
 Write-Step "Pacotes Python (streamlit, plotly, pandas, Pillow, reportlab...)"
 
@@ -126,7 +219,7 @@ if ($python) {
 }
 
 # ─────────────────────────────────────────────
-#  5. Node.js — IsoSolues-MKT
+#  8. Node.js — IsoSolues-MKT
 # ─────────────────────────────────────────────
 Write-Step "Node.js — http-server para IsoSolues-MKT"
 
@@ -139,14 +232,12 @@ if (Get-Command npm -ErrorAction SilentlyContinue) {
 }
 
 # ─────────────────────────────────────────────
-#  6. ASUS Dispositivo 1 — Placa-mãe (ROG / TUF / Prime)
+#  9. ASUS Dispositivo 1 — Placa-mãe (ROG / TUF / Prime)
 # ─────────────────────────────────────────────
 Write-Step "ASUS Dispositivo 1 — Placa-mãe (ROG / TUF / Prime)"
 
-# DriverHub: detecta e instala TODOS os drivers da placa-mãe automaticamente
 Install-WingetApp "ASUS.DriverHub"   "ASUS DriverHub (gerenciador oficial de drivers da placa-mãe)"
 
-# Armoury Crate: Aura Sync, fan curves, overlays
 Write-Host "  -> ASUS Armoury Crate..." -NoNewline
 $acOut = winget install --id "9PM9DSXH6Z5K" --source msstore --accept-package-agreements --accept-source-agreements 2>&1
 if ($LASTEXITCODE -eq 0 -or ($acOut -join '') -match 'already installed|já instalado') {
@@ -160,7 +251,6 @@ if ($LASTEXITCODE -eq 0 -or ($acOut -join '') -match 'already installed|já inst
     }
 }
 
-# Chipset — detecta Intel vs AMD
 Write-Host ""
 Write-Host "  Detectando CPU para drivers de chipset..." -ForegroundColor Yellow
 $cpu = (Get-CimInstance Win32_Processor).Name
@@ -184,7 +274,6 @@ if ($cpu -match "Intel") {
     }
 }
 
-# Áudio Realtek (pré-instalado na maioria das placas ASUS)
 Write-Host "  -> Realtek Audio Control (Microsoft Store)..." -NoNewline
 $rtOut = winget install --id "RealtekSemiconductorCorp.RealtekAudioControl" --accept-package-agreements --accept-source-agreements 2>&1
 if ($LASTEXITCODE -eq 0 -or ($rtOut -join '') -match 'already installed') {
@@ -194,7 +283,7 @@ if ($LASTEXITCODE -eq 0 -or ($rtOut -join '') -match 'already installed') {
 }
 
 # ─────────────────────────────────────────────
-#  7. ASUS Dispositivo 2 — GPU (ROG Strix / TUF Gaming)
+#  10. ASUS Dispositivo 2 — GPU (ROG Strix / TUF Gaming)
 # ─────────────────────────────────────────────
 Write-Step "ASUS Dispositivo 2 — GPU ASUS (ROG Strix / TUF Gaming)"
 
@@ -227,7 +316,7 @@ if ($gpu -match "NVIDIA|GeForce|RTX|GTX") {
 }
 
 # ─────────────────────────────────────────────
-#  8. Clonar repositórios
+#  11. Clonar repositórios
 # ─────────────────────────────────────────────
 Write-Step "Clonando / atualizando repositórios"
 
@@ -256,7 +345,7 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
 }
 
 # ─────────────────────────────────────────────
-#  9. Atalhos no Desktop
+#  12. Atalhos no Desktop
 # ─────────────────────────────────────────────
 Write-Step "Criando atalhos no Desktop"
 
@@ -300,25 +389,28 @@ if (Test-Path "$desktop\AuraDashboard\serve.sh") {
 }
 
 # ─────────────────────────────────────────────
-#  10. Resumo final
+#  13. Resumo final
 # ─────────────────────────────────────────────
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
 Write-Host "║                  SETUP CONCLUIDO!                     ║" -ForegroundColor Magenta
 Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
-Write-Host " Dev Tools  :  Git, Python 3.11, Node.js LTS, VS Code, gh" -ForegroundColor White
-Write-Host " Tunnel     :  cloudflared (serve.sh pronto)" -ForegroundColor White
-Write-Host " Python     :  streamlit, plotly, pandas, Pillow, reportlab" -ForegroundColor White
-Write-Host " ASUS [1]   :  DriverHub + Armoury Crate + Chipset + Realtek Audio" -ForegroundColor White
-Write-Host " ASUS [2]   :  GPU Tweak III + driver NVIDIA/AMD detectado automaticamente" -ForegroundColor White
-Write-Host " Repos      :  Desktop\AuraDashboard  e  Desktop\IsoSoluesMKT" -ForegroundColor White
+Write-Host " Dev Tools     :  Git, Python 3.11, Node.js LTS, VS Code, gh, cloudflared" -ForegroundColor White
+Write-Host " Lazer         :  Steam, Epic, Discord, Spotify, VLC, OBS, Chrome, WhatsApp, Telegram" -ForegroundColor Cyan
+Write-Host " Utilidades    :  PowerToys, Notepad++, CPU-Z, HWiNFO, CrystalDiskInfo, ShareX," -ForegroundColor Yellow
+Write-Host "                  Everything, CCleaner, Bitwarden, qBittorrent, WinSCP, Google Drive" -ForegroundColor Yellow
+Write-Host " Organização   :  Notion, Obsidian, Todoist, To Do, Trello, Slack, Zoom, Thunderbird, Canva" -ForegroundColor Green
+Write-Host " Python libs   :  streamlit, plotly, pandas, Pillow, reportlab" -ForegroundColor White
+Write-Host " ASUS [1]      :  DriverHub + Armoury Crate + Chipset + Realtek Audio" -ForegroundColor White
+Write-Host " ASUS [2]      :  GPU Tweak III + driver NVIDIA/AMD detectado automaticamente" -ForegroundColor White
+Write-Host " Repos         :  Desktop\AuraDashboard  e  Desktop\IsoSoluesMKT" -ForegroundColor White
 Write-Host ""
 Write-Host " PROXIMOS PASSOS:" -ForegroundColor Yellow
 Write-Host "  1. Abra o ASUS DriverHub e clique 'Instalar Todos'" -ForegroundColor Gray
 Write-Host "  2. Reinicie o PC para aplicar todos os drivers" -ForegroundColor Gray
 Write-Host "  3. Atalho 'AuraDashboard' no Desktop para iniciar o sistema" -ForegroundColor Gray
-Write-Host "  4. Para o portal publico: clique 'AuraDashboard Tunel' no Desktop" -ForegroundColor Gray
+Write-Host "  4. Para o portal público: clique 'AuraDashboard Tunel' no Desktop" -ForegroundColor Gray
 Write-Host ""
 Write-Host " Pressione qualquer tecla para fechar..." -ForegroundColor DarkGray
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
