@@ -106,6 +106,16 @@ def init_db() -> None:
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_bulletin_active ON bulletin_updates(is_active, show_to_clients);
+
+        -- Histórico de alterações manuais feitas pelo admin
+        CREATE TABLE IF NOT EXISTS settings_changelog (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT NOT NULL,
+            label TEXT NOT NULL,
+            old_value TEXT,
+            new_value TEXT NOT NULL,
+            changed_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        );
         """)
         conn.commit()
     finally:
@@ -115,6 +125,7 @@ def init_db() -> None:
     _migrate_add_package_quantity()
     _migrate_create_milestone_table()
     _migrate_create_bulletin_table()
+    _migrate_create_settings_changelog()
     _migrate_purge_legacy_multiplier_settings()
 
 
@@ -150,6 +161,27 @@ def _migrate_create_milestone_table() -> None:
             )
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_milestone_client ON milestone_rewards(client_id, reward_date)")
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def _migrate_create_settings_changelog() -> None:
+    """Garante a tabela de histórico de alterações em DBs antigos."""
+    conn = get_conn()
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS settings_changelog (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT NOT NULL,
+                label TEXT NOT NULL,
+                old_value TEXT,
+                new_value TEXT NOT NULL,
+                changed_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+            )
+        """)
         conn.commit()
     except Exception:
         pass
@@ -894,14 +926,76 @@ def get_setting(key: str, default: str = "") -> str:
     finally:
         conn.close()
 
-def set_setting(key: str, value: str) -> None:
-    """Atualiza (ou insere) uma configuração."""
+_SETTING_LABELS = {
+    "program_name":                 "Nome do Programa",
+    "program_subtitle":             "Subtítulo do dashboard",
+    "admin_welcome":                "Saudação do admin",
+    "client_portal_title":          "Título do portal do cliente",
+    "client_portal_intro":          "Introdução do portal do cliente",
+    "whatsapp_purchase":            "Mensagem WhatsApp (compra)",
+    "whatsapp_monthly":             "Mensagem WhatsApp (resumo mensal)",
+    "whatsapp_promo":               "Mensagem WhatsApp (divulgação)",
+    "whatsapp_milestone_500":       "Mensagem WhatsApp (meta atingida)",
+    "auto_notify_whatsapp":         "Aviso automático ao conceder pontos",
+    "auto_open_whatsapp":           "Abrir WhatsApp automaticamente",
+    "sidebar_rules_text":           "Regras visíveis ao cliente",
+    "milestone_packages_threshold": "Meta de pontos",
+    "milestone_reward":             "Recompensa da meta",
+    "card_title":                   "Título do cartão (PNG)",
+    "card_subtitle":                "Subtítulo do cartão (PNG)",
+    "card_footer":                  "Rodapé do cartão (PNG)",
+    "card_emoji":                   "Emoji do cartão (PNG)",
+    "card_primary_color":           "Cor primária do cartão",
+    "card_secondary_color":         "Cor de fundo do cartão",
+    "card_accent_color":            "Cor de destaque do cartão",
+    "card_show_balance":            "Exibir saldo no cartão",
+    "footer_text":                  "Texto do rodapé do dashboard",
+}
+
+
+def set_setting(key: str, value: str, _log: bool = True) -> None:
+    """Atualiza (ou insere) uma configuração e registra a alteração no histórico."""
     conn = get_conn()
     try:
+        old_row = conn.execute("SELECT value FROM app_settings WHERE key = ?", (key,)).fetchone()
+        old_value = old_row["value"] if old_row else None
+
         conn.execute(
             "INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)",
             (key, value)
         )
+
+        if _log and old_value != value:
+            label = _SETTING_LABELS.get(key, key)
+            conn.execute(
+                "INSERT INTO settings_changelog (key, label, old_value, new_value) VALUES (?, ?, ?, ?)",
+                (key, label, old_value, value)
+            )
+
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_settings_changelog(limit: int = 100) -> list:
+    """Retorna o histórico de alterações manuais, do mais recente ao mais antigo."""
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT label, old_value, new_value, changed_at FROM settings_changelog "
+            "ORDER BY id DESC LIMIT ?",
+            (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def clear_settings_changelog() -> None:
+    """Apaga o histórico de alterações (chamado pelo reset de dados)."""
+    conn = get_conn()
+    try:
+        conn.execute("DELETE FROM settings_changelog")
         conn.commit()
     finally:
         conn.close()
@@ -1121,7 +1215,7 @@ def reset_client_data(keep_settings: bool = True) -> None:
         conn.execute("DELETE FROM redemptions")
         conn.execute("DELETE FROM purchases")
         conn.execute("DELETE FROM clients")
-        # Opcional: resetar autoincrement (para IDs começarem do 1 de novo)
+        conn.execute("DELETE FROM settings_changelog")
         conn.execute("DELETE FROM sqlite_sequence WHERE name IN ('clients', 'purchases', 'redemptions')")
         conn.commit()
     finally:

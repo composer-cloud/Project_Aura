@@ -53,6 +53,7 @@ from database import (
     reset_client_data,
     get_public_base_url,
     seed_bulletin_updates,
+    get_settings_changelog,
 )
 from calculations import (
     format_currency,
@@ -1687,124 +1688,159 @@ with st.sidebar:
 
     st.divider()
 
-    # ================== PERSONALIZAÇÃO TOTAL PELO ADMIN ==================
-    with st.expander("⚙️ Personalizar Programa (totalmente editável)", expanded=False):
-        st.markdown("**Edite as regras e todos os textos. Tudo é salvo automaticamente.**")
+    # ================== ALTERAÇÕES MANUAIS — ALTO IMPACTO ==================
+    with st.expander("⚙️ Alterações Manuais", expanded=False):
+        s = get_all_settings()
 
-        current_rules = get_program_rules()
-        current_texts = get_all_settings()
-
-        with st.form("personalization_form"):
-            st.markdown("**Regras (versão simples)**")
-            st.caption("1 pacote = 1 ponto. Sem resgate de pacotes. Apenas meta 500.")
-
-            st.markdown("**Textos e Conteúdo da Interface**")
-            new_program_name = st.text_input("Nome do Programa", value=current_texts.get("program_name", ""))
-            new_subtitle = st.text_input("Subtítulo (admin)", value=current_texts.get("program_subtitle", ""))
-            new_admin_welcome = st.text_area("Saudação inicial (admin)", value=current_texts.get("admin_welcome", ""), height=60)
-
-            st.markdown("**Textos do Portal do Cliente**")
-            new_client_title = st.text_input("Título no portal do cliente", value=current_texts.get("client_portal_title", ""))
-            new_client_intro = st.text_area("Introdução para o cliente", value=current_texts.get("client_portal_intro", ""), height=60)
-
-            st.markdown("**Templates de WhatsApp (use {first_name}, {program_name}, {amount} etc.)**")
-            new_wa_purchase = st.text_area("Mensagem após compra", value=current_texts.get("whatsapp_purchase", ""), height=120)
-            # Sem mensagem de resgate (removido)
-            new_wa_monthly = st.text_area("Mensagem resumo mensal", value=current_texts.get("whatsapp_monthly", ""), height=100)
-            new_wa_promo = st.text_area("Mensagem promocional", value=current_texts.get("whatsapp_promo", ""), height=100)
-
-            st.markdown("**Automação de Avisos**")
-            new_auto_notify = st.checkbox(
-                "Gerar aviso automático ao conceder pontos",
-                value=current_texts.get("auto_notify_whatsapp", "true").lower() == "true",
+        st.markdown("##### 💬 Mensagem WhatsApp após compra")
+        st.caption("Enviada automaticamente para cada cliente ao registrar uma compra.")
+        with st.form("form_wa_purchase"):
+            new_wa_purchase = st.text_area(
+                "Mensagem (variáveis: {first_name}, {points_earned}, {current_points}, {amount})",
+                value=s.get("whatsapp_purchase", ""),
+                height=130,
+                label_visibility="collapsed",
             )
-            new_auto_open = st.checkbox(
-                "Abrir WhatsApp automaticamente após compra",
-                value=current_texts.get("auto_open_whatsapp", "true").lower() == "true",
-            )
-
-            st.markdown("**Cartão Estático de Pontos (PNG)**")
-            card_col1, card_col2 = st.columns(2)
-            with card_col1:
-                new_card_title = st.text_input("Título do cartão", value=current_texts.get("card_title", ""))
-                new_card_subtitle = st.text_input("Subtítulo do cartão", value=current_texts.get("card_subtitle", ""))
-                new_card_footer = st.text_input("Rodapé do cartão", value=current_texts.get("card_footer", ""))
-                new_card_emoji = st.text_input("Emoji do cartão", value=current_texts.get("card_emoji", "🎉"))
-            with card_col2:
-                new_card_primary = st.color_picker("Cor primária", value=current_texts.get("card_primary_color", "#0D9488"))
-                new_card_secondary = st.color_picker("Cor de fundo", value=current_texts.get("card_secondary_color", "#0f172a"))
-                new_card_accent = st.color_picker("Cor de destaque", value=current_texts.get("card_accent_color", "#10b981"))
-                new_card_show_bal = st.checkbox(
-                    "Exibir saldo atual no cartão (recomendado — mostra o total cumulativo)",
-                    value=current_texts.get("card_show_balance", "true").lower() == "true",
-                )
-
-            st.markdown("**Texto das Regras na barra lateral (markdown suportado)**")
-            new_sidebar_rules = st.text_area("Regras (sidebar)", value=current_texts.get("sidebar_rules_text", ""), height=140)
-
-            # ========== META 500 (simples) ==========
-            st.markdown("---")
-            st.markdown("**🏆 Meta 500 Pontos (Cafeteira)**")
-            st.caption("Ao atingir 500 pacotes comprados o cliente ganha automaticamente a Cafeteira.")
-            new_milestone_threshold = st.number_input(
-                "Meta de pacotes/pontos",
-                value=int(current_texts.get("milestone_packages_threshold", 500)),
-                min_value=100, step=50
-            )
-            st.text_input("Recompensa (fixa)", value="Cafeteira", disabled=True)
-
-            new_wa_milestone = st.text_area(
-                "Mensagem WhatsApp quando bater a meta",
-                value=current_texts.get("whatsapp_milestone_500", ""),
-                height=90
-            )
-
-            submitted_pers = st.form_submit_button("💾 Salvar Todas as Personalizações", type="primary", width='stretch')
-
-            if submitted_pers:
-                pass  # sem redemption na versão simples
-                set_setting("program_name", new_program_name)
-                set_setting("program_subtitle", new_subtitle)
-                set_setting("admin_welcome", new_admin_welcome)
-                set_setting("client_portal_title", new_client_title)
-                set_setting("client_portal_intro", new_client_intro)
+            if st.form_submit_button("💾 Salvar mensagem de compra", type="primary", width='stretch'):
                 set_setting("whatsapp_purchase", new_wa_purchase)
-                set_setting("whatsapp_monthly", new_wa_monthly)
-                set_setting("whatsapp_promo", new_wa_promo)
-                set_setting("auto_notify_whatsapp", "true" if new_auto_notify else "false")
-                set_setting("auto_open_whatsapp", "true" if new_auto_open else "false")
-                set_setting("card_title", new_card_title)
-                set_setting("card_subtitle", new_card_subtitle)
-                set_setting("card_footer", new_card_footer)
-                set_setting("card_emoji", new_card_emoji)
-                set_setting("card_primary_color", new_card_primary)
-                set_setting("card_secondary_color", new_card_secondary)
-                set_setting("card_accent_color", new_card_accent)
-                set_setting("card_show_balance", "true" if new_card_show_bal else "false")
-                set_setting("sidebar_rules_text", new_sidebar_rules)
-
-                # Salva configurações do novo marco 500 pacotes
-                set_setting("milestone_packages_threshold", str(int(new_milestone_threshold)))
-                set_setting("milestone_reward", "Cafeteira")
-                set_setting("whatsapp_milestone_500", new_wa_milestone)
-
-                st.success("Personalizações salvas! O painel será atualizado.")
+                st.success("Salvo.")
                 st.cache_data.clear()
                 st.rerun()
 
+        st.markdown("##### 🏆 Mensagem WhatsApp ao bater a meta")
+        st.caption("Enviada quando o cliente atinge 500 pontos e ganha a recompensa.")
+        with st.form("form_wa_milestone"):
+            new_wa_milestone = st.text_area(
+                "Mensagem meta",
+                value=s.get("whatsapp_milestone_500", ""),
+                height=100,
+                label_visibility="collapsed",
+            )
+            if st.form_submit_button("💾 Salvar mensagem de meta", type="primary", width='stretch'):
+                set_setting("whatsapp_milestone_500", new_wa_milestone)
+                st.success("Salvo.")
+                st.cache_data.clear()
+                st.rerun()
+
+        st.markdown("##### 🎯 Meta e Recompensa")
+        with st.form("form_meta"):
+            meta_col1, meta_col2 = st.columns(2)
+            with meta_col1:
+                new_threshold = st.number_input(
+                    "Meta de pontos para ganhar a recompensa",
+                    value=int(s.get("milestone_packages_threshold", 500)),
+                    min_value=10, step=10,
+                )
+            with meta_col2:
+                new_reward = st.text_input(
+                    "Recompensa (ex: Cafeteira, Voucher R$ 200)",
+                    value=s.get("milestone_reward", "Cafeteira"),
+                )
+            if st.form_submit_button("💾 Salvar meta e recompensa", type="primary", width='stretch'):
+                set_setting("milestone_packages_threshold", str(int(new_threshold)))
+                set_setting("milestone_reward", new_reward)
+                st.success("Salvo.")
+                st.cache_data.clear()
+                st.rerun()
+
+        st.markdown("##### 📛 Nome do Programa")
+        st.caption("Aparece no dashboard, nos cards e no portal do cliente.")
+        with st.form("form_name"):
+            new_program_name = st.text_input(
+                "Nome do programa",
+                value=s.get("program_name", ""),
+                label_visibility="collapsed",
+            )
+            new_subtitle = st.text_input(
+                "Subtítulo (linha fina abaixo do nome)",
+                value=s.get("program_subtitle", ""),
+            )
+            if st.form_submit_button("💾 Salvar nome", type="primary", width='stretch'):
+                set_setting("program_name", new_program_name)
+                set_setting("program_subtitle", new_subtitle)
+                st.success("Salvo.")
+                st.cache_data.clear()
+                st.rerun()
+
+        st.markdown("##### 📜 Regras visíveis ao cliente")
+        st.caption("Exibidas no portal do cliente e na sidebar. Suporta Markdown.")
+        with st.form("form_rules"):
+            new_rules = st.text_area(
+                "Regras",
+                value=s.get("sidebar_rules_text", ""),
+                height=140,
+                label_visibility="collapsed",
+            )
+            new_client_intro = st.text_area(
+                "Introdução no portal do cliente",
+                value=s.get("client_portal_intro", ""),
+                height=60,
+            )
+            if st.form_submit_button("💾 Salvar regras", type="primary", width='stretch'):
+                set_setting("sidebar_rules_text", new_rules)
+                set_setting("client_portal_intro", new_client_intro)
+                st.success("Salvo.")
+                st.cache_data.clear()
+                st.rerun()
+
+        st.markdown("##### ⚡ Automação")
+        with st.form("form_auto"):
+            new_auto_notify = st.checkbox(
+                "Gerar aviso automático ao conceder pontos",
+                value=s.get("auto_notify_whatsapp", "true").lower() == "true",
+            )
+            new_auto_open = st.checkbox(
+                "Abrir WhatsApp automaticamente após compra",
+                value=s.get("auto_open_whatsapp", "true").lower() == "true",
+            )
+            if st.form_submit_button("💾 Salvar automação", width='stretch'):
+                set_setting("auto_notify_whatsapp", "true" if new_auto_notify else "false")
+                set_setting("auto_open_whatsapp", "true" if new_auto_open else "false")
+                st.success("Salvo.")
+                st.rerun()
+
+        # ── Histórico completo de alterações ──────────────────────────────────
+        st.divider()
+        st.markdown("##### 📋 Histórico de Alterações")
+        st.caption("Tudo que foi alterado manualmente desde o último reset.")
+
+        changelog = get_settings_changelog(limit=200)
+        if changelog:
+            for entry in changelog:
+                old = entry["old_value"] or "_(não definido)_"
+                new = entry["new_value"]
+                # Trunca valores muito longos para legibilidade na sidebar
+                if len(old) > 60:
+                    old = old[:57] + "..."
+                if len(new) > 60:
+                    new = new[:57] + "..."
+                st.markdown(
+                    f"<div style='font-size:0.78rem; border-left:3px solid #334155; "
+                    f"padding:4px 8px; margin-bottom:4px; background:#0f172a; border-radius:0 6px 6px 0;'>"
+                    f"<span style='color:#94a3b8;'>{entry['changed_at']}</span><br>"
+                    f"<span style='color:#f1f5f9; font-weight:600;'>{entry['label']}</span><br>"
+                    f"<span style='color:#ef4444;'>{old}</span> "
+                    f"<span style='color:#64748b;'>→</span> "
+                    f"<span style='color:#10b981;'>{new}</span>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.caption("Nenhuma alteração registrada ainda.")
+
         st.divider()
         st.markdown("**Zerar dados para uso real**")
-        st.warning("Isso remove TODOS os clientes, compras e resgates. As configurações personalizadas são mantidas.")
+        st.warning("Remove TODOS os clientes, compras e o histórico de alterações. Configurações são mantidas.")
         if st.button("🗑️ ZERAR TODOS OS DADOS DE CLIENTES (irrevogável)", type="secondary", width='stretch'):
             if st.session_state.get("confirm_reset", False):
                 reset_client_data(keep_settings=True)
-                st.success("Dados de clientes zerados com sucesso! Sistema pronto para uso real.")
+                st.success("Dados zerados. Sistema pronto para uso real.")
                 st.session_state["confirm_reset"] = False
                 st.cache_data.clear()
                 st.rerun()
             else:
                 st.session_state["confirm_reset"] = True
-                st.warning("Clique novamente no botão para confirmar a exclusão de todos os dados de clientes.")
+                st.warning("Clique novamente para confirmar.")
 
     # Mensagem geral
     st.divider()
