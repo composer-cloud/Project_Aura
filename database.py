@@ -93,7 +93,19 @@ class _Row:
 
     def __getitem__(self, key):
         if isinstance(key, str):
-            return self._values[self._keys.index(key)]
+            try:
+                return self._values[self._keys.index(key)]
+            except ValueError:
+                # Defesa: se o driver não devolveu os nomes de coluna
+                # corretamente (ex.: description vazio numa sincronização do
+                # Turso), não derruba o app inteiro — registra um aviso e
+                # devolve None, deixando quem chamou (que normalmente já usa
+                # .get(chave, padrão)) cair no valor padrão.
+                import sys
+                print(f"[isopor] Aviso: coluna '{key}' não encontrada na linha "
+                      f"(colunas disponíveis: {self._keys}). Retornando None.",
+                      file=sys.stderr)
+                return None
         return self._values[key]
 
     def keys(self):
@@ -156,10 +168,19 @@ class _TursoConnWrapper:
         self._conn = conn
 
     def execute(self, sql, params=()):
-        return _CursorWrapper(self._conn.execute(sql, params))
+        # Usa conn.cursor() + cursor.execute() em vez do atalho conn.execute():
+        # é o padrão DB-API 2.0 (mesmo caminho que sqlite3.Connection.cursor()
+        # usa) e evita depender do atalho de conveniência do libsql, que em
+        # alguns casos com a embedded replica pode devolver um cursor com
+        # description incompleto.
+        cur = self._conn.cursor()
+        cur.execute(sql, params)
+        return _CursorWrapper(cur)
 
     def executemany(self, sql, seq_of_params):
-        return _CursorWrapper(self._conn.executemany(sql, seq_of_params))
+        cur = self._conn.cursor()
+        cur.executemany(sql, seq_of_params)
+        return _CursorWrapper(cur)
 
     def executescript(self, script):
         return self._conn.executescript(script)
