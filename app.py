@@ -58,6 +58,7 @@ from database import (
     get_public_base_url,
     seed_bulletin_updates,
     get_settings_changelog,
+    persistence_status,
 )
 from calculations import (
     format_currency,
@@ -1546,6 +1547,14 @@ if st.session_state.selected_client_id:
 
 # ================== SIDEBAR - AÇÕES RÁPIDAS E EXPORT ==================
 with st.sidebar:
+    _pstatus = persistence_status()
+    if _pstatus["connected"]:
+        st.success(f"💾 {_pstatus['message']}")
+    elif _pstatus["configured"]:
+        st.warning(f"⚠️ {_pstatus['message']}")
+    else:
+        st.warning(f"⚠️ {_pstatus['message']} Configure o Turso para proteger os cadastros (veja SETUP_TURSO.md).")
+
     st.markdown("### 🌐 Portal dos Clientes + Servidor Público")
 
     portal_url = PUBLIC_PORTAL_URL or get_public_url() or get_public_base_url()

@@ -11,6 +11,7 @@ Todas as regras de cálculo são aplicadas aqui (usando calculations.py).
 Fornece views enriquecidas de clientes com pontos, volume mensal, pacotes etc.
 """
 
+import os
 import sqlite3
 from datetime import date, datetime
 from pathlib import Path
@@ -26,11 +27,215 @@ from calculations import (
 DB_PATH = Path(__file__).parent / "isopor_parceiro.db"
 
 
-def get_conn() -> sqlite3.Connection:
-    """Conexão com row factory para dicionários fáceis."""
+# ---------------------------------------------------------------------------
+# Persistência
+# ---------------------------------------------------------------------------
+# Por padrão o app usa SQLite local (arquivo isopor_parceiro.db), do jeito que
+# sempre funcionou. O problema: em plataformas com filesystem efêmero (ex.
+# Streamlit Community Cloud), esse arquivo é resetado para o que está no
+# GitHub toda vez que o app reinicia — qualquer cadastro feito só na versão
+# rodando é perdido no próximo reboot.
+#
+# Se as credenciais do Turso (banco compatível com SQLite, com persistência
+# real na nuvem) estiverem configuradas — via variável de ambiente ou via
+# st.secrets do Streamlit — o app passa a usar automaticamente uma "embedded
+# replica": o mesmo arquivo local (rápido para leitura) só que sincronizado
+# com o banco remoto do Turso a cada escrita, então os dados sobrevivem a
+# qualquer reboot/redeploy. Sem essas credenciais, o comportamento é
+# EXATAMENTE o mesmo de antes (SQLite puramente local).
+#
+# Configuração necessária (uma das duas formas):
+#   1) Variáveis de ambiente: TURSO_DATABASE_URL e TURSO_AUTH_TOKEN
+#   2) st.secrets (Streamlit Cloud > Settings > Secrets):
+#        TURSO_DATABASE_URL = "libsql://SEU-BANCO.turso.io"
+#        TURSO_AUTH_TOKEN   = "..."
+# ---------------------------------------------------------------------------
+
+try:
+    import libsql  # type: ignore
+except ImportError:  # pragma: no cover - ambiente sem libsql instalado
+    libsql = None
+
+
+def _turso_credentials():
+    """Busca as credenciais do Turso em env vars ou em st.secrets, se existirem."""
+    url = os.environ.get("TURSO_DATABASE_URL")
+    token = os.environ.get("TURSO_AUTH_TOKEN")
+    if not url or not token:
+        try:
+            import streamlit as st  # import tardio para não exigir streamlit em scripts utilitários
+            secrets = getattr(st, "secrets", {})
+            url = url or secrets.get("TURSO_DATABASE_URL")
+            token = token or secrets.get("TURSO_AUTH_TOKEN")
+        except Exception:
+            pass
+    return url, token
+
+
+class _Row:
+    """Imita o comportamento de sqlite3.Row (acesso por nome, índice e dict())."""
+
+    __slots__ = ("_keys", "_values")
+
+    def __init__(self, keys, values):
+        self._keys = keys
+        self._values = list(values)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            return self._values[self._keys.index(key)]
+        return self._values[key]
+
+    def keys(self):
+        return list(self._keys)
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def __len__(self):
+        return len(self._values)
+
+    def __repr__(self):  # pragma: no cover - só ajuda debug
+        return f"Row({dict(zip(self._keys, self._values))})"
+
+
+class _CursorWrapper:
+    """Envolve o cursor do libsql para devolver _Row em vez de tuplas cruas."""
+
+    def __init__(self, cursor):
+        self._cursor = cursor
+
+    def _keys(self):
+        return [d[0] for d in self._cursor.description] if self._cursor.description else []
+
+    def fetchone(self):
+        row = self._cursor.fetchone()
+        return None if row is None else _Row(self._keys(), row)
+
+    def fetchall(self):
+        keys = self._keys()
+        return [_Row(keys, r) for r in self._cursor.fetchall()]
+
+    def fetchmany(self, size=None):
+        keys = self._keys()
+        rows = self._cursor.fetchmany(size) if size is not None else self._cursor.fetchmany()
+        return [_Row(keys, r) for r in rows]
+
+    def __iter__(self):
+        keys = self._keys()
+        for r in self._cursor:
+            yield _Row(keys, r)
+
+    @property
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
+    @property
+    def rowcount(self):
+        return getattr(self._cursor, "rowcount", -1)
+
+    @property
+    def description(self):
+        return self._cursor.description
+
+
+class _TursoConnWrapper:
+    """Conexão libsql (embedded replica) com interface compatível com sqlite3.Connection."""
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, sql, params=()):
+        return _CursorWrapper(self._conn.execute(sql, params))
+
+    def executemany(self, sql, seq_of_params):
+        return _CursorWrapper(self._conn.executemany(sql, seq_of_params))
+
+    def executescript(self, script):
+        return self._conn.executescript(script)
+
+    def commit(self):
+        self._conn.commit()
+        # Empurra as mudanças para o Turso imediatamente após cada commit, para
+        # que nada fique só na cópia local em caso de reboot logo em seguida.
+        try:
+            self._conn.sync()
+        except Exception:
+            pass
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+    def cursor(self):
+        return _CursorWrapper(self._conn.cursor())
+
+
+def get_conn():
+    """Conexão com row factory para dicionários fáceis.
+
+    Usa Turso (persistente) se TURSO_DATABASE_URL/TURSO_AUTH_TOKEN estiverem
+    configurados; caso contrário, cai de volta para SQLite local puro
+    (comportamento idêntico ao de antes desta mudança).
+    """
+    url, token = _turso_credentials()
+    if url and token and libsql is not None:
+        try:
+            # A conexão já faz um sync inicial; se o Turso estiver
+            # inacessível (token errado, sem rede, etc.), isso levanta
+            # exceção aqui mesmo — cai pro SQLite local em vez de derrubar
+            # o app inteiro.
+            conn = libsql.connect(str(DB_PATH), sync_url=url, auth_token=token)
+            return _TursoConnWrapper(conn)
+        except Exception as exc:
+            import sys
+            print(f"[isopor] Aviso: não consegui conectar ao Turso ({exc}). "
+                  f"Usando SQLite local nesta chamada.", file=sys.stderr)
+
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def persistence_status() -> Dict[str, Any]:
+    """Estado atual da persistência, para mostrar na interface (sidebar).
+
+    - configured=False: Turso não configurado, rodando 100% em SQLite local
+      (mesmo risco de antes: reinício do app pode apagar os dados).
+    - configured=True, connected=True: Turso alcançável, dados protegidos.
+    - configured=True, connected=False: credenciais presentes mas o Turso
+      não respondeu agora (rede, token errado, etc.) — o app continua
+      funcionando em SQLite local só nesta sessão.
+    """
+    url, token = _turso_credentials()
+    if not (url and token):
+        return {
+            "configured": False,
+            "connected": False,
+            "message": "Sem backup na nuvem configurado — cadastros só existem no armazenamento local deste app.",
+        }
+    if libsql is None:
+        return {
+            "configured": True,
+            "connected": False,
+            "message": "Turso configurado, mas a biblioteca 'libsql' não está instalada no ambiente.",
+        }
+    try:
+        conn = libsql.connect(str(DB_PATH), sync_url=url, auth_token=token)
+        conn.close()
+        return {
+            "configured": True,
+            "connected": True,
+            "message": "Turso conectado — cadastros persistem na nuvem e sobrevivem a reinícios do app.",
+        }
+    except Exception as exc:
+        return {
+            "configured": True,
+            "connected": False,
+            "message": f"Turso configurado mas inacessível agora ({exc}). Usando SQLite local nesta sessão.",
+        }
 
 
 def init_db() -> None:

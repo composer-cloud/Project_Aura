@@ -227,7 +227,7 @@ def generate_user_manual(settings: Dict[str, Any] = None) -> BytesIO:
                 "Os pontos são sempre somados ao saldo anterior do cliente (acumulação crescente).",
                 "Envie o cartão PNG + mensagem WhatsApp para reforçar o engajamento do cliente.",
                 "Revise os templates de mensagem periodicamente para manter o tom da sua marca.",
-                "Faça backup do arquivo isopor_parceiro.db para preservar todos os dados.",
+                "Se o Turso estiver configurado (persistência na nuvem), os dados sobrevivem a reinícios do app automaticamente. Caso contrário, faça backup manual do arquivo isopor_parceiro.db periodicamente.",
             ],
         ),
     ]
