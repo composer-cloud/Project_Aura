@@ -127,6 +127,27 @@ class _CursorWrapper:
     def __init__(self, cursor):
         self._cursor = cursor
 
+    def execute(self, sql, params=()):
+        """Permite o padrão conn.cursor() seguido de cur.execute(...).fetchall(),
+        usado em algumas partes do código (ex.: _compute_client_stats). Sem
+        este método, chamar .execute() num _CursorWrapper (em vez do cursor
+        cru do libsql) levantava AttributeError."""
+        self._cursor.execute(sql, params)
+        return self
+
+    def executemany(self, sql, seq_of_params):
+        self._cursor.executemany(sql, seq_of_params)
+        return self
+
+    def executescript(self, script):
+        self._cursor.executescript(script)
+        return self
+
+    def close(self):
+        close = getattr(self._cursor, "close", None)
+        if close is not None:
+            close()
+
     def _keys(self):
         return [d[0] for d in self._cursor.description] if self._cursor.description else []
 
