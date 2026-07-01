@@ -26,6 +26,16 @@ from calculations import (
 
 DB_PATH = Path(__file__).parent / "isopor_parceiro.db"
 
+# Caminho local separado para a "embedded replica" do Turso. NÃO pode ser o
+# mesmo arquivo que DB_PATH: o libsql guarda metadados internos de sincronização
+# ao lado do arquivo local, e se apontarmos para o isopor_parceiro.db (que já
+# existe no repositório, commitado no Git, sem esses metadados) a biblioteca
+# recusa a conexão com o erro "invalid local state: db file exists but
+# metadata file does not". Usando um arquivo próprio (que nunca é commitado),
+# o libsql sempre parte de um estado limpo e sincroniza tudo do zero a partir
+# do Turso remoto na primeira conexão.
+TURSO_REPLICA_PATH = Path(__file__).parent / ".turso_replica.db"
+
 
 # ---------------------------------------------------------------------------
 # Persistência
@@ -173,6 +183,34 @@ class _TursoConnWrapper:
         return _CursorWrapper(self._conn.cursor())
 
 
+def _reset_turso_replica_files() -> None:
+    """Remove o arquivo local da embedded replica (e seus sidecars -wal/-shm/-info).
+
+    Usado quando a réplica local fica num estado inconsistente (ex.: processo
+    interrompido no meio de uma sincronização). Removendo, o libsql refaz uma
+    sincronização completa do zero a partir do Turso remoto na próxima conexão.
+    """
+    for p in Path(TURSO_REPLICA_PATH).parent.glob(f"{TURSO_REPLICA_PATH.name}*"):
+        try:
+            p.unlink()
+        except OSError:
+            pass
+
+
+def _connect_turso_replica(url: str, token: str):
+    """Conecta na embedded replica do Turso, com uma tentativa de auto-reparo.
+
+    Se a réplica local estiver num estado inválido (ex.: "db file exists but
+    metadata file does not", ou qualquer inconsistência de sincronização),
+    apaga os arquivos locais e tenta novamente uma vez antes de desistir.
+    """
+    try:
+        return libsql.connect(str(TURSO_REPLICA_PATH), sync_url=url, auth_token=token)
+    except Exception:
+        _reset_turso_replica_files()
+        return libsql.connect(str(TURSO_REPLICA_PATH), sync_url=url, auth_token=token)
+
+
 def get_conn():
     """Conexão com row factory para dicionários fáceis.
 
@@ -187,7 +225,7 @@ def get_conn():
             # inacessível (token errado, sem rede, etc.), isso levanta
             # exceção aqui mesmo — cai pro SQLite local em vez de derrubar
             # o app inteiro.
-            conn = libsql.connect(str(DB_PATH), sync_url=url, auth_token=token)
+            conn = _connect_turso_replica(url, token)
             return _TursoConnWrapper(conn)
         except Exception as exc:
             import sys
@@ -223,7 +261,7 @@ def persistence_status() -> Dict[str, Any]:
             "message": "Turso configurado, mas a biblioteca 'libsql' não está instalada no ambiente.",
         }
     try:
-        conn = libsql.connect(str(DB_PATH), sync_url=url, auth_token=token)
+        conn = _connect_turso_replica(url, token)
         conn.close()
         return {
             "configured": True,

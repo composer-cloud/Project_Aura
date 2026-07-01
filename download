@@ -1,0 +1,14 @@
+google-chrome-stable_current_amd64.deb
+*.deb
+google-chrome-stable_current_amd64.deb
+*.deb
+google-chrome-stable_current_amd64.deb
+*.deb
+google-chrome-stable_current_amd64.deb
+*.deb
+google-chrome-stable_current_amd64.deb
+*.deb
+__pycache__/
+.logs/
+venv/
+.turso_replica.db*
