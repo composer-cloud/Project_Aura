@@ -96,11 +96,22 @@ class _Row:
             try:
                 return self._values[self._keys.index(key)]
             except ValueError:
-                # Defesa: se o driver não devolveu os nomes de coluna
-                # corretamente (ex.: description vazio numa sincronização do
-                # Turso), não derruba o app inteiro — registra um aviso e
-                # devolve None, deixando quem chamou (que normalmente já usa
-                # .get(chave, padrão)) cair no valor padrão.
+                # Alguns drivers (ex.: libsql/Turso) devolvem nomes de coluna
+                # em um "case" diferente do usado na query — em especial para
+                # identificadores que colidem com palavras reservadas do SQL
+                # (a coluna "key" volta como "KEY" no cursor.description).
+                # Tenta um fallback case-insensitive antes de desistir.
+                lowered = key.lower()
+                for i, k in enumerate(self._keys):
+                    if k.lower() == lowered:
+                        return self._values[i]
+
+                # Defesa: se o driver realmente não devolveu os nomes de
+                # coluna corretamente (ex.: description vazio numa
+                # sincronização do Turso), não derruba o app inteiro —
+                # registra um aviso e devolve None, deixando quem chamou
+                # (que normalmente já usa .get(chave, padrão)) cair no
+                # valor padrão.
                 import sys
                 print(f"[isopor] Aviso: coluna '{key}' não encontrada na linha "
                       f"(colunas disponíveis: {self._keys}). Retornando None.",
