@@ -1,0 +1,318 @@
+<title>Estreia — Cartão Fidelidade IsoSoluções</title>
+<style>
+  :root{
+    --bg-1:#141922;
+    --bg-2:#1f2733;
+    --ink:#eef2f6;
+    --ink-dim:#9aa7b8;
+    --line:#333f4f;
+    --cyan:#2fc1e8;
+    --cyan-glow:#7fe6ff;
+    --red:#e13a4b;
+    --red-glow:#ff8792;
+    --gold:#e7b64f;
+    --gold-glow:#ffd98a;
+    --card:#242c39;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -8%, rgba(47,193,232,0.16), transparent 60%),
+      linear-gradient(155deg, var(--bg-1), var(--bg-2) 60%, var(--bg-1));
+    color:var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding: clamp(20px, 4vw, 48px) 16px;
+  }
+
+  .poster{
+    position:relative;
+    width:100%;
+    max-width:560px;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 64px),
+      linear-gradient(180deg, rgba(255,255,255,0.02), transparent 18%);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding: clamp(28px, 5vw, 46px) clamp(24px, 6vw, 40px) 32px;
+    overflow:hidden;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6);
+  }
+
+  .poster::before{
+    content:"";
+    position:absolute;
+    inset:-40% -10% auto -10%;
+    height:70%;
+    background: radial-gradient(ellipse at 50% 0%, rgba(225,58,75,0.14), transparent 65%);
+    pointer-events:none;
+  }
+
+  /* ---------- brand mark ---------- */
+  .brandrow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    position:relative;
+  }
+  .hexmark{ width:34px; height:34px; flex:none; }
+  .wordmark{
+    font-size: 15px;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+  .wordmark .iso{ color:var(--cyan-glow); }
+  .wordmark .sol{ color:var(--red-glow); }
+
+  /* ---------- eyebrow / launch ribbon ---------- */
+  .eyebrow-row{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-top:22px;
+  }
+  .pill{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    padding:5px 12px;
+    border-radius:999px;
+    border:1px solid;
+  }
+  .pill.estreia{
+    color:#0c1015;
+    background: linear-gradient(120deg, var(--cyan), var(--red));
+    border-color:transparent;
+  }
+  .pill.date{
+    color:var(--ink-dim);
+    border-color:var(--line);
+    letter-spacing:0.12em;
+  }
+
+  /* ---------- headline ---------- */
+  .headline{
+    text-align:center;
+    margin: 18px 0 6px;
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-weight:700;
+    font-size: clamp(38px, 9vw, 54px);
+    line-height:1.02;
+    color:#f4fbff;
+    text-shadow:
+      0 0 6px rgba(127,230,255,0.55),
+      0 0 24px rgba(47,193,232,0.35),
+      0 0 60px rgba(47,193,232,0.18);
+    text-wrap: balance;
+  }
+
+  .tagline{
+    text-align:center;
+    font-weight:800;
+    font-size: clamp(15px, 3.6vw, 19px);
+    letter-spacing:0.03em;
+    margin-bottom:26px;
+  }
+  .tagline .a{
+    color:var(--red-glow);
+    text-shadow:0 0 4px rgba(255,135,146,0.6), 0 0 18px rgba(225,58,75,0.35);
+  }
+  .tagline .b{
+    color:var(--cyan-glow);
+    text-shadow:0 0 4px rgba(127,230,255,0.6), 0 0 18px rgba(47,193,232,0.35);
+  }
+
+  hr.div{
+    border:none;
+    height:1px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+    margin: 4px 0 24px;
+  }
+
+  /* ---------- how it works ---------- */
+  .section-label{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-bottom:14px;
+  }
+
+  .rules{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:26px;
+  }
+  .rule{
+    display:grid;
+    grid-template-columns:28px 1fr;
+    gap:12px;
+    align-items:start;
+    font-size:14.5px;
+    line-height:1.45;
+    color:var(--ink);
+  }
+  .rule .mark{
+    width:26px; height:26px;
+    border-radius:50%;
+    border:1.5px solid var(--cyan);
+    color:var(--cyan-glow);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800;
+    flex:none;
+    margin-top:1px;
+  }
+  .rule b{ color:#fff; }
+  .rule .sub{ color:var(--ink-dim); font-size:13px; }
+
+  /* ---------- reward callout ---------- */
+  .reward{
+    position:relative;
+    border:1px solid rgba(231,182,79,0.4);
+    background: linear-gradient(160deg, rgba(231,182,79,0.10), rgba(231,182,79,0.02));
+    border-radius:8px;
+    padding:20px 20px 18px;
+    margin-bottom:26px;
+    text-align:center;
+  }
+  .reward .kicker{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  .reward .num{
+    font-family: Georgia, serif;
+    font-weight:700;
+    font-size:clamp(28px,7vw,34px);
+    color:var(--gold-glow);
+    text-shadow:0 0 20px rgba(231,182,79,0.35);
+    line-height:1.1;
+  }
+  .reward .desc{
+    font-size:13.5px;
+    color:var(--ink-dim);
+    margin-top:6px;
+  }
+  .reward .desc strong{ color:var(--ink); }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    text-align:center;
+    padding-top:6px;
+  }
+  .cta .lead{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:6px;
+    text-wrap:balance;
+  }
+  .cta .sub{
+    font-size:13px;
+    color:var(--ink-dim);
+  }
+
+  .footer{
+    margin-top:28px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:11px;
+    color:var(--ink-dim);
+    letter-spacing:0.04em;
+  }
+
+  .validity{
+    text-align:center;
+    margin-top:10px;
+    font-size:12px;
+    color:var(--ink-dim);
+    letter-spacing:0.01em;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .reward{ animation: glow 3.6s ease-in-out infinite; }
+    @keyframes glow{
+      0%,100%{ box-shadow:0 0 0 rgba(231,182,79,0); }
+      50%{ box-shadow:0 0 34px -6px rgba(231,182,79,0.35); }
+    }
+  }
+</style>
+
+<div class="poster">
+
+  <div class="brandrow">
+    <svg class="hexmark" viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <linearGradient id="hexline" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#2fc1e8"/>
+          <stop offset="100%" stop-color="#e13a4b"/>
+        </linearGradient>
+      </defs>
+      <polygon points="50,4 91,27 91,73 50,96 9,73 9,27" fill="none" stroke="url(#hexline)" stroke-width="4"/>
+      <text x="38" y="60" font-family="Georgia, serif" font-weight="700" font-size="30" fill="#2fc1e8">I</text>
+      <text x="52" y="66" font-family="Georgia, serif" font-weight="700" font-size="26" fill="#e13a4b">S</text>
+    </svg>
+    <div class="wordmark"><span class="iso">Iso</span><span class="sol">Soluções</span></div>
+  </div>
+
+  <div class="eyebrow-row">
+    <span class="pill estreia">Estreia</span>
+    <span class="pill date">Julho 2026</span>
+  </div>
+
+  <h1 class="headline">Cartão<br>Fidelidade</h1>
+  <p class="tagline"><span class="a">Comprou</span> = <span class="b">Ganhou</span></p>
+
+  <hr class="div">
+
+  <div class="section-label">Como funciona</div>
+  <div class="rules">
+    <div class="rule">
+      <div class="mark">R$</div>
+      <div><b>A cada R$ 38 em compras, 1 ponto.</b><br><span class="sub">Simples assim — sem pegadinha.</span></div>
+    </div>
+    <div class="rule">
+      <div class="mark">+</div>
+      <div><b>Os pontos se somam pra sempre.</b><br><span class="sub">Sem tabela por faixa, sem multiplicador.</span></div>
+    </div>
+    <div class="rule">
+      <div class="mark">↺</div>
+      <div><b>A cada 2 meses oferecemos um brinde diferente!</b><br><span class="sub">(e os pontos zeram)</span></div>
+    </div>
+  </div>
+
+  <div class="reward">
+    <div class="kicker">Presente especial</div>
+    <div class="num">500 pacotes comprados</div>
+    <div class="desc">e uma <strong>cafeteira</strong> é sua — de brinde, concedida automaticamente.</div>
+  </div>
+
+  <div class="cta">
+    <div class="lead">Peça seu Cartão Fidelidade na próxima compra.</div>
+    <div class="sub">A cada nova compra enviaremos o cartão fidelidade atualizado para acompanhar em tempo real!</div>
+    <div class="validity">Brinde válido até 31/08/2026 ***</div>
+  </div>
+
+  <div class="footer">
+    <span>IsoSoluções</span>
+    <span>·</span>
+    <span>Distribuição de Isopor</span>
+    <span>·</span>
+    <span>Rio de Janeiro</span>
+  </div>
+
+</div>

@@ -1,0 +1,300 @@
+<title>Estreia — Cartão Fidelidade IsoSoluções (paisagem)</title>
+<style>
+  :root{
+    --bg-1:#141922;
+    --bg-2:#1f2733;
+    --ink:#eef2f6;
+    --ink-dim:#9aa7b8;
+    --line:#333f4f;
+    --cyan:#2fc1e8;
+    --cyan-glow:#7fe6ff;
+    --red:#e13a4b;
+    --red-glow:#ff8792;
+    --gold:#e7b64f;
+    --gold-glow:#ffd98a;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(47,193,232,0.14), transparent 60%),
+      linear-gradient(155deg, var(--bg-1), var(--bg-2) 60%, var(--bg-1));
+    color:var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding: clamp(16px, 3vw, 40px);
+  }
+
+  .poster{
+    position:relative;
+    width:100%;
+    max-width:1120px;
+    aspect-ratio: 16 / 9;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 64px),
+      linear-gradient(180deg, rgba(255,255,255,0.02), transparent 18%);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,0.6);
+    display:grid;
+    grid-template-columns: 1.05fr 1fr;
+  }
+
+  .poster::before{
+    content:"";
+    position:absolute;
+    inset:-30% 40% auto -20%;
+    height:80%;
+    background: radial-gradient(ellipse at 30% 0%, rgba(225,58,75,0.14), transparent 65%);
+    pointer-events:none;
+  }
+
+  /* ---------- left: brand + hero ---------- */
+  .left{
+    position:relative;
+    padding: clamp(28px,3.4vw,48px) clamp(24px,3vw,44px);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    border-right:1px solid var(--line);
+  }
+
+  .brandrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .hexmark{ width:32px; height:32px; flex:none; }
+  .wordmark{ font-size:14px; font-weight:700; letter-spacing:0.02em; }
+  .wordmark .iso{ color:var(--cyan-glow); }
+  .wordmark .sol{ color:var(--red-glow); }
+
+  .hero{ margin-top:auto; margin-bottom:auto; }
+
+  .eyebrow-row{ display:flex; gap:8px; margin-bottom:18px; }
+  .pill{
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    padding:5px 11px;
+    border-radius:999px;
+    border:1px solid;
+  }
+  .pill.estreia{
+    color:#0c1015;
+    background: linear-gradient(120deg, var(--cyan), var(--red));
+    border-color:transparent;
+  }
+  .pill.date{ color:var(--ink-dim); border-color:var(--line); letter-spacing:0.1em; }
+
+  .headline{
+    margin:0 0 8px;
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-weight:700;
+    font-size: clamp(36px, 4.6vw, 58px);
+    line-height:1.02;
+    color:#f4fbff;
+    text-shadow:
+      0 0 6px rgba(127,230,255,0.55),
+      0 0 24px rgba(47,193,232,0.35),
+      0 0 60px rgba(47,193,232,0.18);
+    text-wrap:balance;
+  }
+
+  .tagline{
+    font-weight:800;
+    font-size: clamp(15px, 1.7vw, 20px);
+    letter-spacing:0.03em;
+    margin:0;
+  }
+  .tagline .a{ color:var(--red-glow); text-shadow:0 0 4px rgba(255,135,146,0.6), 0 0 18px rgba(225,58,75,0.35); }
+  .tagline .b{ color:var(--cyan-glow); text-shadow:0 0 4px rgba(127,230,255,0.6), 0 0 18px rgba(47,193,232,0.35); }
+
+  .cta{ max-width:34ch; }
+  .cta .lead{ font-size:15.5px; font-weight:700; margin:0 0 5px; text-wrap:balance; }
+  .cta .sub{ font-size:12.5px; color:var(--ink-dim); margin:0; }
+
+  /* ---------- right: mechanics + reward ---------- */
+  .right{
+    position:relative;
+    padding: clamp(28px,3.4vw,48px) clamp(24px,3vw,44px);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:22px;
+  }
+
+  .section-label{
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.17em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 12px;
+  }
+
+  .rules{ display:flex; flex-direction:column; gap:11px; }
+  .rule{
+    display:grid;
+    grid-template-columns:24px 1fr;
+    gap:11px;
+    align-items:start;
+    font-size:13.5px;
+    line-height:1.4;
+  }
+  .rule .mark{
+    width:24px; height:24px;
+    border-radius:50%;
+    border:1.5px solid var(--cyan);
+    color:var(--cyan-glow);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800;
+    flex:none; margin-top:1px;
+  }
+  .rule b{ color:#fff; }
+  .rule .sub{ color:var(--ink-dim); font-size:12px; }
+
+  .reward{
+    position:relative;
+    border:1px solid rgba(231,182,79,0.4);
+    background: linear-gradient(160deg, rgba(231,182,79,0.10), rgba(231,182,79,0.02));
+    border-radius:8px;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .reward .kicker{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:4px;
+  }
+  .reward .num{
+    font-family: Georgia, serif;
+    font-weight:700;
+    font-size:clamp(18px,2vw,22px);
+    color:var(--gold-glow);
+    text-shadow:0 0 16px rgba(231,182,79,0.35);
+    line-height:1.15;
+    white-space:nowrap;
+  }
+  .reward .desc{ font-size:12.5px; color:var(--ink-dim); margin-top:3px; }
+  .reward .desc strong{ color:var(--ink); }
+
+  .footer{
+    margin-top:6px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:10.5px;
+    color:var(--ink-dim);
+    letter-spacing:0.03em;
+  }
+
+  .validity{
+    position:absolute;
+    right: clamp(24px,3vw,44px);
+    bottom: clamp(28px,3.4vw,48px);
+    font-size:12px;
+    color:var(--ink-dim);
+    text-align:right;
+    letter-spacing:0.01em;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .reward{ animation: glow 3.6s ease-in-out infinite; }
+    @keyframes glow{
+      0%,100%{ box-shadow:0 0 0 rgba(231,182,79,0); }
+      50%{ box-shadow:0 0 30px -6px rgba(231,182,79,0.35); }
+    }
+  }
+
+  @media (max-width: 720px){
+    .poster{ grid-template-columns:1fr; aspect-ratio:auto; }
+    .left{ border-right:none; border-bottom:1px solid var(--line); }
+  }
+</style>
+
+<div class="poster">
+
+  <div class="left">
+    <div class="brandrow">
+      <svg class="hexmark" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <linearGradient id="hexline" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#2fc1e8"/>
+            <stop offset="100%" stop-color="#e13a4b"/>
+          </linearGradient>
+        </defs>
+        <polygon points="50,4 91,27 91,73 50,96 9,73 9,27" fill="none" stroke="url(#hexline)" stroke-width="4"/>
+        <text x="38" y="60" font-family="Georgia, serif" font-weight="700" font-size="30" fill="#2fc1e8">I</text>
+        <text x="52" y="66" font-family="Georgia, serif" font-weight="700" font-size="26" fill="#e13a4b">S</text>
+      </svg>
+      <div class="wordmark"><span class="iso">Iso</span><span class="sol">Soluções</span></div>
+    </div>
+
+    <div class="hero">
+      <div class="eyebrow-row">
+        <span class="pill estreia">Estreia</span>
+        <span class="pill date">Julho 2026</span>
+      </div>
+      <h1 class="headline">Cartão<br>Fidelidade</h1>
+      <p class="tagline"><span class="a">Comprou</span> = <span class="b">Ganhou</span></p>
+    </div>
+
+    <div class="cta">
+      <p class="lead">Peça seu Cartão Fidelidade na próxima compra.</p>
+      <p class="sub">A cada nova compra enviaremos o cartão fidelidade atualizado para acompanhar em tempo real!</p>
+    </div>
+  </div>
+
+  <div class="right">
+    <div>
+      <div class="section-label">Como funciona</div>
+      <div class="rules">
+        <div class="rule">
+          <div class="mark">R$</div>
+          <div><b>A cada R$ 38 em compras, 1 ponto.</b><br><span class="sub">Simples assim — sem pegadinha.</span></div>
+        </div>
+        <div class="rule">
+          <div class="mark">+</div>
+          <div><b>Os pontos se somam pra sempre.</b><br><span class="sub">Sem tabela por faixa, sem multiplicador.</span></div>
+        </div>
+        <div class="rule">
+          <div class="mark">↺</div>
+          <div><b>A cada 2 meses oferecemos um brinde diferente!</b><br><span class="sub">(e os pontos zeram)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reward">
+      <div>
+        <div class="kicker">Presente especial</div>
+        <div class="num">500 pacotes comprados</div>
+        <div class="desc">e uma <strong>cafeteira</strong> é sua — de brinde, automática.</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>IsoSoluções</span>
+      <span>·</span>
+      <span>Distribuição de Isopor</span>
+      <span>·</span>
+      <span>Rio de Janeiro</span>
+    </div>
+
+    <div class="validity">Brinde válido até 31/08/2026 ***</div>
+  </div>
+
+</div>
